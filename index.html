@@ -78,8 +78,13 @@
             background:rgba(236, 182, 202, 0.08);
             color:#f0c8d6;
         }
+        .visit-stat{
+            margin-top:24px;
+            font-size:14px;
+            color:#94a3b8;
+        }
         .back-tip{
-            margin-top:28px;
+            margin-top:20px;
             font-size:13px;
             opacity:0.45;
         }
@@ -92,6 +97,10 @@
     <div class="desc">属于我们的故事才刚刚开始</div>
     <a href="yifengxin.html" class="nav-item">✉️ 一封写给小怡的信</a>
     <a href="jishiqi.html" class="nav-item">💞 计时器</a>
+
+    <!-- 访问统计直接展示在导航页内 -->
+    <div class="visit-stat">👁️ 总访问：<span id="visitCount">加载中…</span></div>
+
     <div class="back-tip"></div>
 </div>
 <script>
@@ -99,14 +108,12 @@ const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let w,h,stars = [];
 let meteors = [];
-
 function resize(){
     w = canvas.width = innerWidth;
     h = canvas.height = innerHeight;
 }
 resize();
 window.addEventListener('resize',resize);
-
 // 分层星星，带闪烁相位、视差速度
 for(let i=0;i<650;i++){
     const layer = Math.random();
@@ -133,7 +140,6 @@ for(let i=0;i<650;i++){
         twinkleSpeed: 0.015 + Math.random()*0.025
     })
 }
-
 function spawnMeteor(){
     const isFireball = Math.random()>0.88;
     meteors.push({
@@ -150,7 +156,6 @@ function spawnMeteor(){
 }
 //启动流星
 setTimeout(spawnMeteor,1000);
-
 function draw(){
     ctx.fillStyle="#080c18";
     ctx.fillRect(0,0,w,h);
@@ -168,7 +173,6 @@ function draw(){
             s.x = Math.random()*w;
         }
     })
-
     for(let i = meteors.length -1; i >=0; i--){
         let m = meteors[i];
         //流星渐变尾迹
@@ -181,7 +185,6 @@ function draw(){
         ctx.strokeStyle = grad;
         ctx.lineWidth = m.isFireball ? 2.8 :1.4;
         ctx.stroke();
-
         m.x += m.speedX;
         m.y += m.speedY;
         m.opacity -= m.isFireball ? 0.0045 :0.0075;
@@ -192,7 +195,6 @@ function draw(){
     requestAnimationFrame(draw);
 }
 draw();
-
 const starfield = document.getElementById("starfield");
 const navWrap = document.getElementById("navWrap");
 window.addEventListener('load',()=>{
@@ -200,7 +202,21 @@ window.addEventListener('load',()=>{
     setTimeout(()=>{
         navWrap.classList.add('show');
     },600);
-})
+});
+
+// ====== 访问计数逻辑 hitokoto counter ======
+async function loadVisitCount(){
+    const el = document.getElementById("visitCount");
+    try{
+        // 注意：把下面 your-site-name 改成任意英文标识，作为你的计数器id
+        const res = await fetch("https://v1.hitokoto.cn/counter?v=your-site-name");
+        const json = await res.json();
+        el.innerText = json.count;
+    }catch(e){
+        el.innerText = "获取失败";
+    }
+}
+loadVisitCount();
 </script>
 </body>
 </html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>公历农历日历‑生日倒计时</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+    min-height:100vh;
+    background:#070b17;
+    color:#e2e8f0;
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+}
+body{
+    display:flex;
+    justify-content:center;
+    padding:20px 12px;
+}
+#starfield{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+}
+.wrap{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:720px;
+}
+.head-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+}
+.title{
+    font-size:21px;
+    letter-spacing:2px;
+}
+.btn-nav{
+    border:1px solid #ecb6ca;
+    color:#ecb6ca;
+    background:transparent;
+    border-radius:8px;
+    padding:7px 13px;
+    cursor:pointer;
+    transition:.2s;
+}
+.btn-nav:hover{background:rgba(236,182,202,0.08);}
+.info-card{
+    border:1px solid rgba(236,182,202,0.25);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:14px;
+}
+.info-card p{
+    line-height:1.7;
+    font-size:14px;
+    opacity:0.9;
+}
+.memo-inline{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid rgba(255,255,255,0.08);
+    font-size:13px;
+    line-height:1.8;
+}
+.week-row{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:5px;
+    margin-bottom:6px;
+}
+.week-item{
+    text-align:center;
+    font-size:13px;
+    opacity:0.65;
+    padding:5px 0;
+}
+.calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:5px;
+}
+.day-cell{
+    aspect-ratio:1/1;
+    border:1px solid rgba(236,182,202,0.18);
+    border-radius:9px;
+    padding:3px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:.2s;
+}
+.day-cell:hover{
+    background:rgba(236,182,202,0.08);
+}
+.day-cell.today{
+    background:rgba(236,182,202,0.22);
+    border-color:#ecb6ca;
+}
+.day-cell.other-month{
+    opacity:0.26;
+}
+.solar-day{
+    font-size:16px;
+}
+.lunar-day{
+    font-size:10.5px;
+    opacity:0.6;
+    margin-top:2px;
+}
+.back-wrap{
+    margin-top:24px;
+    text-align:center;
+}
+.back-btn{
+    border:1px solid #ecb6ca;
+    color:#ecb6ca;
+    background:transparent;
+    border-radius:8px;
+    padding:8px 20px;
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div class="wrap">
+    <div class="head-bar">
+        <button class="btn-nav" id="prevBtn">← 上月</button>
+        <div class="title" id="ymTitle">2026年10月</div>
+        <button class="btn-nav" id="nextBtn">下月 →</button>
+    </div>
+
+    <div class="info-card">
+        <p id="dateText">公历：2026‑10‑22</p>
+        <p id="lunarText">农历：丙午年 九月十三</p>
+        <div class="memo-inline" id="memoPanel"></div>
+    </div>
+
+    <div class="week-row">
+        <div class="week-item">日</div>
+        <div class="week-item">一</div>
+        <div class="week-item">二</div>
+        <div class="week-item">三</div>
+        <div class="week-item">四</div>
+        <div class="week-item">五</div>
+        <div class="week-item">六</div>
+    </div>
+    <div class="calendar-grid" id="calGrid"></div>
+
+    <div class="back-wrap">
+        <button class="back-btn" onclick="location.href='index.html'">返回首页</button>
+    </div>
+</div>
+
+<script>
+const lunarInfo = [
+0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
+0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0
+];
+const Gan=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const Zhi=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const lunarDayCN=["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+"十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+"廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+
+function leapMonth(y){return lunarInfo[y-1900]&0xf;}
+function leapDays(y){return leapMonth(y)?((lunarInfo[y-1900]&0x10000)?30:29):0;}
+function monthDays(y,m){return (lunarInfo[y-1900]&(0x10000>>m))?30:29;}
+function lYearDays(y){let s=348;for(let i=0x8000;i>0x8;i>>=1)s+=(lunarInfo[y-1900]&i)?1:0;return s+leapDays(y);}
+
+function solarToLunar(date){
+    let offset=Math.floor((Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())-Date.UTC(1900,0,31))/86400000);
+    let i,temp=0,leap=0,isLeap=false;
+    for(i=1900;i<2050&&offset>0;i++){temp=lYearDays(i);offset-=temp;}
+    if(offset<0){offset+=temp;i--;}
+    const year=i;leap=leapMonth(i);
+    for(i=1;i<13&&offset>0;i++){
+        if(leap>0&&i===leap+1&&!isLeap){i--;isLeap=true;temp=leapDays(year);}
+        else temp=monthDays(year,i);
+        if(isLeap&&i===leap+1)isLeap=false;
+        offset-=temp;
+    }
+    if(offset===0&&leap>0&&i===leap+1){if(isLeap)isLeap=false;else isLeap=true;}
+    if(offset<0){offset+=temp;i--;}
+    const month=i;const day=offset+1;
+    const gzYear=Gan[(year-4)%10]+Zhi[(year-4)%12];
+    return {year,month,day,isLeap,gzYear,cnDay:lunarDayCN[day-1]};
+}
+function fromLunar(year,month,day){
+    let offset=0;
+    const base=new Date(1900,0,31);
+    for(let i=1900;i<year;i++) offset+=lYearDays(i);
+    let leap=leapMonth(year),isLeap=false,temp;
+    for(let i=1;i<month;i++){
+        if(leap>0&&i===leap+1&&!isLeap){i--;isLeap=true;temp=leapDays(year);}
+        else temp=monthDays(year,i);
+        if(isLeap&&i===leap+1)isLeap=false;
+        offset+=temp;
+    }
+    if(leap>0&&month>leap) offset+=leapDays(year);
+    offset+=day-1;
+    return new Date(base.getTime()+offset*86400000);
+}
+
+const canvas=document.getElementById("starfield");
+const ctx=canvas.getContext("2d");
+let w,h,stars=[],meteors=[];
+function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;}
+resize();addEventListener("resize",resize);
+for(let i=0;i<520;i++){
+    stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.1+0.2,s:Math.random()*0.04+0.01,a:Math.random()*Math.PI*2});
+}
+function draw(){
+    ctx.fillStyle="rgba(7,11,23,0.35)";ctx.fillRect(0,0,w,h);
+    stars.forEach(s=>{
+        s.a+=0.02;const a=0.45+Math.sin(s.a)*0.35;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(180,210,255,${a})`;ctx.fill();
+        s.y+=s.s;if(s.y>h){s.y=0;s.x=Math.random()*w;}
+    });
+    for(let i=meteors.length-1;i>=0;i--){
+        const m=meteors[i];
+        ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+m.l,m.y-m.l);
+        ctx.strokeStyle=`rgba(255,255,255,${m.o})`;ctx.lineWidth=1.2;ctx.stroke();
+        m.x+=m.xs;m.y+=m.ys;m.o-=0.012;
+        if(m.o<=0)meteors.splice(i,1);
+    }
+    requestAnimationFrame(draw);
+}
+draw();
+function spawnMeteor(){
+    meteors.push({x:Math.random()*w,y:Math.random()*h*0.4,l:Math.random()*70+40,xs:-(Math.random()*1.6+0.6),ys:Math.random()*1.4+0.5,o:Math.random()*0.4+0.5});
+    setTimeout(spawnMeteor,1800+Math.random()*2600);
+}
+setTimeout(spawnMeteor,1200);
+
+let viewYear,viewMonth;
+const now=new Date();
+viewYear=now.getFullYear();
+viewMonth=now.getMonth();
+
+const ymTitle=document.getElementById("ymTitle");
+const calGrid=document.getElementById("calGrid");
+const dateText=document.getElementById("dateText");
+const lunarText=document.getElementById("lunarText");
+const prevBtn=document.getElementById("prevBtn");
+const nextBtn=document.getElementById("nextBtn");
+const memoPanel=document.getElementById("memoPanel");
+
+const memoConfig=[
+    {
+        title:"🎂 启元生日",
+        type:"solarYearly",
+        m:5,d:11
+    },
+    {
+        title:"🎂 星念生日",
+        type:"lunarYearly",
+        lm:4,ld:19
+    }
+];
+
+function getDayDiff(targetDate){
+    const n=new Date();
+    const nowDay=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+    const t=new Date(targetDate.getFullYear(),targetDate.getMonth(),targetDate.getDate());
+    const diffMs=t.getTime()-nowDay.getTime();
+    return Math.round(diffMs/(1000*3600*24));
+}
+
+function getNextOccur(item){
+    const cy=new Date().getFullYear();
+    if(item.type==="solarYearly"){
+        let d=new Date(cy,item.m,item.d);
+        const now=new Date();
+        if(d<now) d=new Date(cy+1,item.m,item.d);
+        return d;
+    }else if(item.type==="lunarYearly"){
+        let d=fromLunar(cy,item.lm,item.ld);
+        const now=new Date();
+        if(d<now) d=fromLunar(cy+1,item.lm,item.ld);
+        return d;
+    }
+}
+
+function renderMemoPanel(){
+    let html="";
+    memoConfig.forEach(it=>{
+        const nextDt=getNextOccur(it);
+        const diffDay=getDayDiff(nextDt);
+        let tip="";
+        if(diffDay===0){
+            tip="✨就是今天！";
+        }else if(diffDay>0){
+            tip=`还有 ${diffDay} 天生日`;
+        }else{
+            tip=`已过去 ${Math.abs(diffDay)} 天`;
+        }
+        html+=`<div>${it.title}：${tip}</div>`;
+    });
+    memoPanel.innerHTML=html;
+}
+
+function renderInfo(d){
+    const lu=solarToLunar(d);
+    dateText.textContent=`公历：${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    lunarText.textContent=`农历：${lu.gzYear}年 ${lu.isLeap?'闰':''}${lu.month}月${lu.cnDay}`;
+}
+
+function renderCalendar(){
+    ymTitle.innerText=`${viewYear}年${viewMonth+1}月`;
+    calGrid.innerHTML="";
+    const first=new Date(viewYear,viewMonth,1);
+    const last=new Date(viewYear,viewMonth+1,0);
+    const firstWeek=first.getDay();
+    const totalDays=last.getDate();
+    const prevLast=new Date(viewYear,viewMonth,0).getDate();
+    const today=new Date();
+
+    for(let i=0;i<firstWeek;i++){
+        const d=prevLast-firstWeek+i+1;
+        const dt=new Date(viewYear,viewMonth-1,d);
+        const lu=solarToLunar(dt);
+        const cell=document.createElement("div");
+        cell.className="day-cell other-month";
+        cell.innerHTML=`<div class="solar-day">${d}</div><div class="lunar-day">${lu.cnDay}</div>`;
+        cell.onclick=()=>renderInfo(dt);
+        calGrid.appendChild(cell);
+    }
+    for(let d=1;d<=totalDays;d++){
+        const dt=new Date(viewYear,viewMonth,d);
+        const lu=solarToLunar(dt);
+        const isToday=(dt.toDateString()===today.toDateString());
+        const cell=document.createElement("div");
+        cell.className="day-cell"+(isToday?" today":"");
+        cell.innerHTML=`<div class="solar-day">${d}</div><div class="lunar-day">${lu.cnDay}</div>`;
+        cell.onclick=()=>renderInfo(dt);
+        calGrid.appendChild(cell);
+    }
+    const totalCell=calGrid.children.length;
+    const need=42-totalCell;
+    for(let d=1;d<=need;d++){
+        const dt=new Date(viewYear,viewMonth+1,d);
+        const lu=solarToLunar(dt);
+        const cell=document.createElement("div");
+        cell.className="day-cell other-month";
+        cell.innerHTML=`<div class="solar-day">${d}</div><div class="lunar-day">${lu.cnDay}</div>`;
+        cell.onclick=()=>renderInfo(dt);
+        calGrid.appendChild(cell);
+    }
+    renderInfo(new Date());
+    renderMemoPanel();
+}
+
+prevBtn.onclick=()=>{
+    viewMonth--;
+    if(viewMonth<0){viewMonth=11;viewYear--;}
+    renderCalendar();
+};
+nextBtn.onclick=()=>{
+    viewMonth++;
+    if(viewMonth>11){viewMonth=0;viewYear++;}
+    renderCalendar();
+};
+
+renderCalendar();
+setInterval(renderMemoPanel,1000);
+</script>
+</body>
+</html>

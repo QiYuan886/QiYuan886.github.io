@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>公历农历日历‑生日倒计时</title>
+<title>📅日历</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
@@ -269,12 +269,12 @@ const memoPanel=document.getElementById("memoPanel");
 
 const memoConfig=[
     {
-        title:"🎂 启元生日",
+        title:"🎂 启元",
         type:"solarYearly",
         m:5,d:11
     },
     {
-        title:"🎂 星念生日",
+        title:"🎂 星念",
         type:"lunarYearly",
         lm:4,ld:19
     }
@@ -312,7 +312,7 @@ function renderMemoPanel(){
         if(diffDay===0){
             tip="✨就是今天！";
         }else if(diffDay>0){
-            tip=`还有 ${diffDay} 天生日`;
+            tip=`还有 ${diffDay} 天过生日`;
         }else{
             tip=`已过去 ${Math.abs(diffDay)} 天`;
         }

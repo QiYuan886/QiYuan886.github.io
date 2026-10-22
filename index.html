@@ -94,6 +94,7 @@
     <div class="desc">属于我们的故事才刚刚开始</div>
     <a href="yifengxin.html" class="nav-item">✉️ 一封写给星念的信</a>
     <a href="jishiqi.html" class="nav-item">💞 计时器</a>
+    <a href="calendar.html" class="nav-item">📅 日历</a>
     <div class="back-tip" id="randomTip"></div>
 </div>
 <script>
@@ -101,7 +102,6 @@ const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let w,h,stars = [];
 let meteors = [];
-
 // 情话库，自行增删
 const sentenceList = [
     "岁岁无虞，岁岁与你。",
@@ -113,10 +113,8 @@ const sentenceList = [
     "世间万般美好，都不及你。",
     "晚风与星光，都替我想念你。"
 ];
-
 const tipDom = document.getElementById("randomTip");
 let currentIndex = 0;
-
 // 切换句子，带淡入淡出
 function showSentence(){
     tipDom.style.opacity = 0;
@@ -130,15 +128,12 @@ function showSentence(){
 showSentence();
 //每3秒轮换一次
 setInterval(showSentence,3000);
-
-
 function resize(){
     w = canvas.width = innerWidth;
     h = canvas.height = innerHeight;
 }
 resize();
 window.addEventListener('resize',resize);
-
 // 分层星星，带闪烁相位、视差速度
 for(let i=0;i<650;i++){
     const layer = Math.random();
@@ -165,7 +160,6 @@ for(let i=0;i<650;i++){
         twinkleSpeed: 0.015 + Math.random()*0.025
     })
 }
-
 function spawnMeteor(){
     const isFireball = Math.random()>0.88;
     meteors.push({
@@ -182,7 +176,6 @@ function spawnMeteor(){
 }
 //启动流星
 setTimeout(spawnMeteor,1000);
-
 function draw(){
     ctx.fillStyle="#080c18";
     ctx.fillRect(0,0,w,h);
@@ -222,7 +215,6 @@ function draw(){
     requestAnimationFrame(draw);
 }
 draw();
-
 const starfield = document.getElementById("starfield");
 const navWrap = document.getElementById("navWrap");
 window.addEventListener('load',()=>{

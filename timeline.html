@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>里程碑｜岁岁无虞</title>
-    <meta name="description" content="相识、旅行、生日——我们走过的每一个节点。">
+    <title>里程碑</title>
+    <meta name="description" content="我们走过的每一个节点。">
     <style>
         :root {
             --bg: #080c18;
@@ -230,16 +230,14 @@
 
     <header class="page-head">
         <h1>里程碑</h1>
-        <p>一个看长度，一个看节点</p>
+        <p>想要将我们的里程碑一直续写下去...</p>
     </header>
 
     <div class="timeline" id="timeline"></div>
 </div>
 
 <script>
-/* ============================================
-   星空背景（复用首页效果）
-   ============================================ */
+
 const canvas = document.getElementById('starfield');
 const ctx = canvas.getContext('2d');
 let w, h, stars = [], meteors = [];
@@ -338,25 +336,29 @@ draw();
    ============================================ */
 const milestones = [
     {
-        date: '2023-05-20',
-        title: '初次相遇',
-        desc: '那天聊到了很晚。'
+        date: '2026-09-20',
+        title: '我们相识了',
+        desc: '那天聊到了很晚..🥱.'
     },
     {
-        date: '2023-08-14',
-        title: '第一次一起旅行',
-        desc: '两个人的行李，装得比想象中少。',
-        image: 'images/first-trip.jpg'
+        date: '2026-09-30',
+        title: '我们在一起了',
+        desc: '本来还以为会表白失败😅',
     },
     {
-        date: '2024-01-01',
-        title: '一起过的第一个新年',
-        desc: ''
+        date: '2026-10-19',
+        title: '刷新了最长通话记录',
+        desc: '那天居然打了18个小时的电话🥳',
     },
     {
-        date: '2024-06-18',
-        title: '做了一个重要的决定',
-        desc: '写在这里。'
+        date: '2026-11-04',
+        title: '收到她给我寄的东西了',
+        desc: '都是她用过的东西——好开心🥰'
+    },
+    {
+        date: '202？-？-？',
+        title: '待更新',
+        desc: '待更新。'
     }
     /* 未来节点示例：
     {

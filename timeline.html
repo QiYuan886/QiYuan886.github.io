@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>里程碑｜岁岁无虞</title>
+    <meta name="description" content="相识、旅行、生日——我们走过的每一个节点。">
+    <style>
+        :root {
+            --bg: #080c18;
+            --text: #cbd5e1;
+            --muted: #94a3b8;
+            --accent: #ecb6ca;
+            --line: rgba(148, 163, 184, 0.18);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            background-color: var(--bg);
+            font-family: "思源黑体", system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            line-height: 1.75;
+            overflow-x: hidden;
+        }
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        /* ---------- 内容容器 ---------- */
+        .wrap {
+            position: relative;
+            z-index: 2;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 24px 96px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 1s ease;
+        }
+        .wrap.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ---------- 返回按钮（沿用首页 nav-item 的交互） ---------- */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 14px;
+            padding: 10px 18px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            transition: 0.3s ease;
+            margin-bottom: 40px;
+        }
+        .back-btn:hover {
+            border-color: var(--accent);
+            background: rgba(236, 182, 202, 0.08);
+            color: #f0c8d6;
+        }
+
+        /* ---------- 页头 ---------- */
+        .page-head {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+        .page-head h1 {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: #e2e8f0;
+            margin-bottom: 12px;
+        }
+        .page-head p {
+            font-size: 14px;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* ---------- 时间轴 ---------- */
+        .timeline {
+            position: relative;
+            padding: 8px 0;
+        }
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            background: linear-gradient(
+                to bottom,
+                transparent,
+                var(--line) 8%,
+                var(--line) 92%,
+                transparent
+            );
+            transform: translateX(-50%);
+        }
+
+        .tl-item {
+            position: relative;
+            width: 50%;
+            padding: 0 44px;
+            margin-bottom: 56px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .tl-item.visible {
+            opacity: 1;
+            transform: none;
+        }
+        .tl-item:nth-child(odd)  { left: 0;   text-align: right; }
+        .tl-item:nth-child(even) { left: 50%; text-align: left;  }
+
+        .tl-item::after {
+            content: "";
+            position: absolute;
+            top: 9px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 12px rgba(236, 182, 202, 0.5);
+        }
+        .tl-item:nth-child(odd)::after  { right: 0; transform: translateX(50%); }
+        .tl-item:nth-child(even)::after { left: 0;  transform: translateX(-50%); }
+
+        .tl-date {
+            display: block;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .tl-title {
+            font-size: 17px;
+            font-weight: 400;
+            color: #e2e8f0;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .tl-desc {
+            font-size: 14px;
+            color: var(--muted);
+            white-space: pre-line;
+        }
+        .tl-img {
+            display: block;
+            width: 100%;
+            max-width: 280px;
+            margin-top: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+        }
+        .tl-item:nth-child(odd) .tl-img {
+            margin-left: auto;
+        }
+
+        /* 未来节点的虚线样式（可选使用） */
+        .tl-item.future::after {
+            border-style: dashed;
+            border-color: var(--muted);
+            box-shadow: none;
+        }
+        .tl-item.future .tl-date {
+            color: var(--muted);
+        }
+
+        /* ---------- 移动端：单侧靠左 ---------- */
+        @media (max-width: 720px) {
+            .wrap {
+                padding: 40px 20px 72px;
+            }
+            .page-head {
+                margin-bottom: 44px;
+            }
+            .timeline::before {
+                left: 7px;
+                transform: none;
+            }
+            .tl-item {
+                width: 100%;
+                left: 0 !important;
+                padding: 0 0 0 34px;
+                text-align: left !important;
+                margin-bottom: 44px;
+            }
+            .tl-item::after {
+                left: 7px;
+                right: auto;
+                transform: translateX(-50%);
+            }
+            .tl-item:nth-child(odd) .tl-img {
+                margin-left: 0;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .tl-item {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+
+<div class="wrap" id="wrap">
+    <a class="back-btn" href="./index.html">← 返回首页</a>
+
+    <header class="page-head">
+        <h1>里程碑</h1>
+        <p>一个看长度，一个看节点</p>
+    </header>
+
+    <div class="timeline" id="timeline"></div>
+</div>
+
+<script>
+/* ============================================
+   星空背景（复用首页效果）
+   ============================================ */
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+let w, h, stars = [], meteors = [];
+
+function resize() {
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+for (let i = 0; i < 500; i++) {
+    const layer = Math.random();
+    let r, speed;
+    if (layer < 0.65) {
+        r = Math.random() * 0.6 + 0.15;
+        speed = Math.random() * 0.08 + 0.02;
+    } else if (layer < 0.92) {
+        r = Math.random() * 1.1 + 0.35;
+        speed = Math.random() * 0.18 + 0.06;
+    } else {
+        r = Math.random() * 1.8 + 0.6;
+        speed = Math.random() * 0.32 + 0.1;
+    }
+    stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: r,
+        speed: speed,
+        twinklePhase: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.015 + Math.random() * 0.025
+    });
+}
+
+function spawnMeteor() {
+    const isFireball = Math.random() > 0.88;
+    meteors.push({
+        x: Math.random() * w * 0.4 + w * 0.6,
+        y: Math.random() * h * 0.35,
+        len: isFireball ? Math.random() * 120 + 80 : Math.random() * 70 + 30,
+        speedX: isFireball ? -2.2 : -(Math.random() * 1.8 + 0.8),
+        speedY: isFireball ? 2.2 : (Math.random() * 1.8 + 0.8),
+        opacity: isFireball ? 1.0 : (Math.random() * 0.5 + 0.4),
+        isFireball
+    });
+    setTimeout(spawnMeteor, 1800 + Math.random() * 3600);
+}
+setTimeout(spawnMeteor, 1500);
+
+function draw() {
+    ctx.fillStyle = "#080c18";
+    ctx.fillRect(0, 0, w, h);
+
+    stars.forEach(s => {
+        s.twinklePhase += s.twinkleSpeed;
+        const twinkle = 0.35 + Math.sin(s.twinklePhase) * 0.35;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(210,225,255,${twinkle})`;
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > h) {
+            s.y = 0;
+            s.x = Math.random() * w;
+        }
+    });
+
+    for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        const grad = ctx.createLinearGradient(m.x, m.y, m.x + m.len, m.y - m.len);
+        grad.addColorStop(0, `rgba(255,255,255,${m.opacity})`);
+        grad.addColorStop(1, `rgba(255,255,255,0)`);
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x + m.len, m.y - m.len);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = m.isFireball ? 2.8 : 1.4;
+        ctx.stroke();
+        m.x += m.speedX;
+        m.y += m.speedY;
+        m.opacity -= m.isFireball ? 0.0045 : 0.0075;
+        if (m.opacity <= 0) meteors.splice(i, 1);
+    }
+
+    requestAnimationFrame(draw);
+}
+draw();
+
+/* ============================================
+   里程碑数据：只改这里
+   date  : 'YYYY-MM-DD' / 'YYYY-MM' / 'YYYY'
+   title : 标题
+   desc  : 描述（可选，支持换行）
+   image : 图片路径（可选）
+   future: true 表示还没发生、计划中的节点（虚线样式）
+   ============================================ */
+const milestones = [
+    {
+        date: '2023-05-20',
+        title: '初次相遇',
+        desc: '那天聊到了很晚。'
+    },
+    {
+        date: '2023-08-14',
+        title: '第一次一起旅行',
+        desc: '两个人的行李，装得比想象中少。',
+        image: 'images/first-trip.jpg'
+    },
+    {
+        date: '2024-01-01',
+        title: '一起过的第一个新年',
+        desc: ''
+    },
+    {
+        date: '2024-06-18',
+        title: '做了一个重要的决定',
+        desc: '写在这里。'
+    }
+    /* 未来节点示例：
+    {
+        date: '2025-12-31',
+        title: '一起跨年',
+        desc: '计划中',
+        future: true
+    }
+    */
+];
+
+function formatDate(str) {
+    const [y, m, d] = String(str).split('-');
+    if (!m) return `${y} 年`;
+    if (!d) return `${y} 年 ${Number(m)} 月`;
+    return `${y} 年 ${Number(m)} 月 ${Number(d)} 日`;
+}
+
+function renderTimeline() {
+    const box = document.getElementById('timeline');
+    const list = milestones
+        .slice()
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    box.innerHTML = list.map(m => `
+        <article class="tl-item${m.future ? ' future' : ''}">
+            <time class="tl-date" datetime="${m.date}">${formatDate(m.date)}</time>
+            <h2 class="tl-title">${m.title}</h2>
+            ${m.desc ? `<p class="tl-desc">${m.desc}</p>` : ''}
+            ${m.image ? `<img class="tl-img" src="${m.image}" alt="${m.title}" loading="lazy">` : ''}
+        </article>
+    `).join('');
+
+    observeItems();
+}
+
+function observeItems() {
+    const items = document.querySelectorAll('.tl-item');
+
+    if (!('IntersectionObserver' in window)) {
+        items.forEach(el => el.classList.add('visible'));
+        return;
+    }
+
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                io.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    items.forEach(el => io.observe(el));
+}
+
+renderTimeline();
+
+/* 页面加载：星空淡入 + 内容浮现 */
+window.addEventListener('load', () => {
+    canvas.style.opacity = '1';
+    setTimeout(() => {
+        document.getElementById('wrap').classList.add('show');
+    }, 400);
+});
+</script>
+</body>
+</html>
